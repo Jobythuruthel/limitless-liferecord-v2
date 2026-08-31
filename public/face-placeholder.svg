@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Abstract holographic silhouette placeholder">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="60%">
+      <stop offset="0%" stop-color="#7ef9ff" stop-opacity="0.55" />
+      <stop offset="55%" stop-color="#38bdf8" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#0b1220" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="silhouette" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0e7490" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#082f49" stop-opacity="0.95" />
+    </linearGradient>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="transparent" />
+      <rect width="4" height="1" fill="#7ef9ff" opacity="0.06" />
+    </pattern>
+  </defs>
+
+  <rect width="512" height="512" fill="#050912" />
+  <rect width="512" height="512" fill="url(#glow)" />
+
+  <!-- abstract head/shoulders silhouette, no facial features -->
+  <g opacity="0.92">
+    <ellipse cx="256" cy="196" rx="86" ry="98" fill="url(#silhouette)" />
+    <path
+      d="M110 460 C110 340 175 296 256 296 C337 296 402 340 402 460 Z"
+      fill="url(#silhouette)"
+    />
+  </g>
+
+  <!-- holographic contour rings -->
+  <g fill="none" stroke="#7ef9ff" stroke-opacity="0.35" stroke-width="1.5">
+    <ellipse cx="256" cy="196" rx="112" ry="126" />
+    <ellipse cx="256" cy="196" rx="132" ry="148" stroke-opacity="0.18" />
+  </g>
+
+  <rect width="512" height="512" fill="url(#scan)" />
+
+  <text x="256" y="500" text-anchor="middle" font-family="monospace" font-size="12" fill="#7ef9ff" opacity="0.6">
+    NO FACE DATA — PLACEHOLDER
+  </text>
+</svg>

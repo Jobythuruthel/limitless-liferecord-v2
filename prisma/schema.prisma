@@ -1,0 +1,157 @@
+// Prisma schema for JOBY AI — Limitless Liferecord
+//
+// LOCAL DEV / BUILD DEFAULT: this repo defaults DATABASE_URL to a local
+// SQLite file so `npm install && npx prisma generate && npm run build`
+// works out of the box in any sandbox with no external database.
+//
+// PRODUCTION: swap the datasource provider below to "postgresql" and point
+// DATABASE_URL at a real Postgres instance before deploying. SQLite is not
+// suitable for production (no concurrent writers, no network access).
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// NOTE: SQLite (the local-dev default datasource) has no native enum
+// support, so the following are modeled as `String` with the allowed
+// value sets documented here. When you swap the datasource provider to
+// "postgresql" for production, you may optionally convert these back to
+// real Prisma `enum` blocks.
+//
+// Role:                "admin" | "member"
+// IntegrationProvider: "basecamp" | "slack"
+// SyncStatus:          "pending" | "running" | "success" | "error"
+// FaceAssetStatus:     "pending" | "generating" | "ready" | "failed"
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          String    @default("member") // admin | member
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts             Account[]
+  sessions             Session[]
+  integrationSettings  IntegrationSettings[]
+  faceAssets           FaceAsset[]
+}
+
+// NextAuth adapter models (Prisma adapter requires these)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/// One curated narrative/analysis entry for a given calendar date.
+model DailyAnalysis {
+  id           String   @id @default(cuid())
+  date         String   @unique // YYYY-MM-DD
+  analysisText String
+  metadata     String   @default("{}") // JSON-encoded (SQLite has no native Json type)
+  published    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// A single task/todo entry attached to a calendar date, optionally sourced
+/// from an external integration (Basecamp/Slack) via sourceRef.
+model DailyTask {
+  id          String    @id @default(cuid())
+  date        String // YYYY-MM-DD
+  title       String
+  description String    @default("")
+  status      String    @default("open") // open | in_progress | done | blocked
+  dueAt       DateTime?
+  order       Int       @default(0)
+  sourceRef   String? // e.g. "basecamp:todo:12345" or "slack:msg:C123.456"
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date])
+}
+
+/// Per-user configuration for how an external integration's channels/
+/// projects map onto DailyTask date-tagging behavior. Never stores raw
+/// OAuth tokens — see tokenRef doc below.
+model IntegrationSettings {
+  id           String              @id @default(cuid())
+  provider     String              // basecamp | slack
+  userId       String
+  mappingRules String              @default("{}") // JSON-encoded mapping rules
+  /// IMPORTANT: this is NOT a raw access/refresh token. It is a reference
+  /// key (e.g. an id in an encrypted secret store / KMS / vault) that a
+  /// production deployment resolves at call time. Never write a plaintext
+  /// OAuth token into this column.
+  tokenRef     String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, userId])
+}
+
+/// Audit log of ingestion/sync runs against an external integration.
+model SyncRunLog {
+  id         String              @id @default(cuid())
+  provider   String              // basecamp | slack
+  status     String              @default("pending") // pending | running | success | error
+  lastCursor String?
+  message    String?
+  startedAt  DateTime            @default(now())
+  finishedAt DateTime?
+}
+
+/// A generated (or placeholder) holographic face asset for a user.
+model FaceAsset {
+  id        String          @id @default(cuid())
+  userId    String
+  mcpId     String? // optional external/job id from the pluggable face-gen backend
+  status    String          @default("pending") // pending | generating | ready | failed
+  url       String? // resolved image URL (or placeholder path) once ready
+  checksum  String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

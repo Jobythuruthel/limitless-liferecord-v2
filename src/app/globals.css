@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #05070d;
+  --foreground: #e6faff;
+  --holo-cyan: #7ef9ff;
+  --holo-blue: #38bdf8;
+}
+
+body {
+  color: var(--foreground);
+  background: radial-gradient(circle at 50% -10%, #0c1a2b 0%, #05070d 55%, #030509 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* ---------- Holographic glow / glass utilities ---------- */
+
+.holo-glow {
+  box-shadow:
+    0 0 0 1px rgba(126, 249, 255, 0.06),
+    0 20px 60px -20px rgba(56, 189, 248, 0.35),
+    0 0 40px -12px rgba(126, 249, 255, 0.25);
+}
+
+.holo-frame {
+  will-change: transform;
+}
+
+.holo-face-tint {
+  background: linear-gradient(180deg, rgba(5, 7, 13, 0) 0%, rgba(5, 7, 13, 0.85) 100%);
+}
+
+/* Scanline overlay: a faint repeating gradient + a slow vertical sweep. */
+.holo-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(126, 249, 255, 0.05) 0px,
+    rgba(126, 249, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: screen;
+}
+
+.holo-sweep {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(126, 249, 255, 0.08) 45%,
+    rgba(126, 249, 255, 0.16) 50%,
+    rgba(126, 249, 255, 0.08) 55%,
+    transparent 100%
+  );
+  transform: translateY(-100%);
+  animation: holo-sweep-move 6s ease-in-out infinite;
+}
+
+@keyframes holo-sweep-move {
+  0% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.holo-btn {
+  will-change: transform, box-shadow;
+}
+
+/* ---------- Landing hero: staged fade-in + glow build-up ---------- */
+
+.hero-stage {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: hero-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-stage-1 {
+  animation-delay: 0.1s;
+}
+.hero-stage-2 {
+  animation-delay: 0.35s;
+}
+.hero-stage-3 {
+  animation-delay: 0.6s;
+}
+.hero-stage-4 {
+  animation-delay: 0.85s;
+}
+
+@keyframes hero-fade-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-glow-build {
+  animation: hero-glow-pulse 4s ease-in-out 1s infinite;
+}
+
+@keyframes hero-glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 24px rgba(126, 249, 255, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 0 46px rgba(126, 249, 255, 0.5));
+  }
+}
+
+.hero-parallax {
+  transform: translateZ(0);
+  transition: transform 0.2s ease-out;
+}
+
+/* ---------- Scroll reveal (paired with useScrollReveal hook) ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Motion accessibility ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage,
+  .hero-glow-build,
+  .holo-sweep,
+  .reveal {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
